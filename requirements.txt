@@ -1,0 +1,113 @@
+# =========================
+# CORE WEB FRAMEWORK
+# =========================
+fastapi
+uvicorn[standard]
+websockets
+python-multipart
+
+# =========================
+# CONFIGURATION & ENV
+# =========================
+python-dotenv
+pydantic
+pydantic-settings
+
+# =========================
+# MACHINE LEARNING / AI
+# =========================
+torch
+torchaudio
+transformers
+sentence-transformers
+accelerate
+optimum
+
+# =========================
+# WHISPER ASR
+# =========================
+faster-whisper
+ctranslate2
+
+# =========================
+# AUDIO PROCESSING
+# =========================
+ffmpeg-python
+soundfile
+librosa
+numpy
+scipy
+pydub
+
+# =========================
+# VOICE ACTIVITY DETECTION
+# =========================
+silero-vad
+
+# =========================
+# TEXT-TO-SPEECH
+# =========================
+piper-tts
+
+# Optional alternative TTS
+TTS
+
+# =========================
+# VECTOR SEARCH / EMBEDDINGS
+# =========================
+qdrant-client
+faiss-cpu
+
+# =========================
+# CACHE
+# =========================
+redis
+hiredis
+
+# =========================
+# DATABASE
+# =========================
+sqlalchemy
+psycopg2-binary
+alembic
+
+# =========================
+# ASYNC / PERFORMANCE
+# =========================
+aiofiles
+httpx
+asyncio
+
+# =========================
+# LANGUAGE DETECTION
+# =========================
+langdetect
+fasttext-wheel
+
+# =========================
+# SUBTITLES
+# =========================
+srt
+
+# =========================
+# DATA HANDLING
+# =========================
+pandas
+
+# =========================
+# LOGGING & MONITORING
+# =========================
+loguru
+prometheus-client
+
+# =========================
+# TESTING
+# =========================
+pytest
+pytest-asyncio
+
+# =========================
+# UTILITIES
+# =========================
+tqdm
+orjson

@@ -1,0 +1,945 @@
+Line by line breakdown for app/main.py and app/utils/logger.py
+
+APP/MAIN.PY
+
+Line 1:
+"""Backbone of the translation system, responsible 
+for orchestrating the various components."""
+This is a module docstring. A docstring is a built-in Python way to describe what a file or function is for. It helps people understand the file quickly.
+
+Line 3:
+from fastapi import FastAPI, Response, status
+This imports tools from FastAPI.
+- FastAPI: creates the web application.
+- Response: lets us change the HTTP response details.
+- status: gives us readable HTTP status codes like 503.
+
+Line 4:
+from app.utils.logger import get_logger
+This imports your custom logger helper from another file in your project.
+It lets this file log messages in the same style as the rest of the app.
+
+Line 5:
+import asyncio
+This imports Python's async helper tools.
+We use it here to add time limits to readiness checks.
+
+Line 6:
+import time
+This imports Python's time tools.
+We use it to track how long the app has been running.
+
+Line 8:
+app = FastAPI()
+This creates the FastAPI application object.
+Think of it as the main app container that holds routes like /, /health, and /ready.
+
+Line 9:
+logger = get_logger("app")
+This creates a logger named app.
+That logger is used to print useful messages to the terminal.
+
+Line 10:
+_start_time = time.time()
+This saves the current time at startup.
+Later, /health uses it to calculate uptime.
+
+Line 13:
+async def _check_db() -> bool:
+This defines an async function that will eventually check the database.
+The -> bool part means the function should return True or False.
+The underscore at the start of the name suggests it is an internal helper.
+
+Line 14:
+# replace with real async DB ping when ready
+This is a comment for humans.
+It reminds you that this is temporary placeholder code.
+
+Line 15:
+return True
+This is a placeholder return value.
+Right now it always says the database is okay, but later you will replace it with a real check.
+
+Line 17:
+async def _check_cache() -> bool:
+This defines another async helper function.
+It will later check whether the cache is working.
+
+Line 18:
+# replace with real cache ping
+This is a reminder comment.
+It tells you to replace the fake check with a real cache check later.
+
+Line 19:
+return True
+This is a temporary placeholder result.
+It says the cache is working for now.
+
+Line 21:
+async def _check_model() -> bool:
+This defines a helper function for checking whether the model is loaded and ready.
+
+Line 22:
+# replace with model-loaded check
+This is a reminder comment for future work.
+It tells you this is not the final model check yet.
+
+Line 23:
+return True
+This is another placeholder.
+It means the model is treated as ready for now.
+
+Line 26:
+@app.get("/")
+This is a route decorator.
+It tells FastAPI: when someone sends a GET request to the root path /, run the function below.
+
+Line 27:
+async def read_root():
+This defines the function that handles the root route.
+It is async, which is fine even though this simple route does not await anything yet.
+
+Line 28:
+return {"message": "Welcome to the Translation System API!"}
+This returns a Python dictionary.
+FastAPI automatically turns it into JSON in the response.
+
+Line 31:
+@app.get("/health")
+This registers the health route.
+It is usually used to check whether the app process is alive.
+
+Line 32:
+async def health():
+This defines the function for the health route.
+It does not need any input right now.
+
+Line 33:
+uptime = time.time() - _start_time
+This calculates how long the app has been running.
+It subtracts the startup time from the current time.
+
+Line 34:
+payload = {"status": "ok", "uptime_seconds": round(uptime, 2)}
+This creates the data that will be returned.
+It includes a status message and uptime in seconds rounded to two decimal places.
+
+Line 35:
+logger.info("Health check OK")
+This writes a log message to the terminal.
+It helps you see that the health route was called successfully.
+
+Line 36:
+return payload
+This sends the health information back to the caller as JSON.
+
+Line 39:
+@app.get("/ready")
+This registers the readiness route.
+Readiness means: is the app ready to receive real traffic and use its dependencies?
+
+Line 40:
+async def ready(response: Response):
+This defines the readiness handler.
+The response object lets you change the HTTP status code if something is not ready.
+
+Line 41:
+# Wrap each check in a timeout so one slow dependency does not freeze the request.
+This comment explains why the timeout is there.
+It protects the app from waiting forever on a slow dependency.
+
+Line 42:
+try:
+This starts a block that watches for errors.
+If an error happens inside the block, Python jumps to the matching except block.
+
+Line 43:
+db_ok = await asyncio.wait_for(_check_db(), timeout=5.0)
+This runs the database check but gives it only 5 seconds.
+If it does not finish in time, asyncio raises a timeout error.
+
+Line 44:
+except Exception:
+This catches any error from the database check.
+You changed it to catch all exceptions so the route does not crash.
+
+Line 45:
+db_ok = False
+This marks the database as not ready if something went wrong.
+
+Line 47:
+# Cache should respond quickly; if it does not, we mark it as not ready.
+This explains the cache check in simple terms.
+
+Line 48:
+try:
+This begins the cache error-handling block.
+
+Line 49:
+cache_ok = await asyncio.wait_for(_check_cache(), timeout=5.0)
+This checks the cache with a 5-second timeout.
+If it is too slow, it is treated as not ready.
+
+Line 50:
+except Exception:
+This catches any error during the cache check.
+
+Line 51:
+cache_ok = False
+This marks the cache as not ready when the check fails.
+
+Line 53:
+# The model check tells you whether the translation model is available.
+This comment explains the purpose of the model check.
+
+Line 54:
+try:
+This begins the model error-handling block.
+
+Line 55:
+model_ok = await asyncio.wait_for(_check_model(), timeout=5.0)
+This checks whether the model is ready, again with a 5-second timeout.
+
+Line 56:
+except Exception:
+This catches any error from the model check.
+
+Line 57:
+model_ok = False
+This marks the model as not ready if the check fails.
+
+Line 59:
+failed = [name for name, ok in (("db", db_ok), ("cache", cache_ok), ("model", model_ok)) if not ok]
+This builds a list of any checks that failed.
+Example: if the database and model failed, failed becomes ["db", "model"].
+
+Line 61:
+if failed:
+This checks whether the failed list has anything in it.
+If it does, the app is not ready.
+
+Line 62:
+response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
+This changes the HTTP status code to 503.
+503 means the service is temporarily unavailable or not ready.
+
+Line 63:
+logger.warning(f"Readiness failed: {failed}")
+This writes a warning log so you can see which checks failed.
+
+Line 64:
+return {"status": "unready", "failed": failed}
+This returns a JSON response showing that the app is not ready and which parts failed.
+
+Line 66:
+logger.info("Readiness check OK")
+This logs that everything passed.
+
+Line 67:
+return {"status": "ready"}
+This returns success for the readiness route.
+
+ADDED SECTION: SCRIPTS/TRANSLATE_RUNNER.PY
+
+Line 1:
+"""Small helper to run ASR -> translation pipeline from the command line.
+This module docstring explains that the script is a developer helper to run
+the full flow (ASR followed by translation) from the command line.
+
+Line ~12:
+from app.utils.logger import get_logger
+This imports the shared logger factory so the script prints logs in the same
+format as the rest of the app.
+
+Line ~20:
+class DummyEngine:
+This tiny class provides a predictable, local-only translation engine used
+when the user passes `--mock`. It avoids downloading large models.
+
+Line ~35:
+engine = WhisperEngine(...)
+service = TranscriptionService(engine=engine)
+asr_result = service.transcribe(audio_path)
+This is the ASR step: instantiate the singleton engine, wrap it in the
+service, and call `transcribe(...)` to get text and metadata.
+
+Line ~50:
+translator = Translator(engine_kwargs={"model_name": args.nllb_model, "device": "cpu"})
+If not mocked, create a `Translator` that will construct an `NLLBEngine` with
+the requested `--nllb_model`. This keeps the CLI simple while letting the
+Translator manage the heavy model lifecycle.
+
+Line ~55:
+translation = translator.translate(transcript, src_lang=asr_result.get("language"), tgt_lang=args.tgt)
+We pass the ASR-detected language into the translator to help the model.
+
+ADDED SECTION: APP/TRANSLATION/NLLB_ENGINE.PY
+
+Line 1:
+"""
+Minimal NLLB engine wrapper (singleton, lazy-loaded).
+This module-level docstring explains the responsibilities of the file.
+
+Line ~20:
+class NLLBEngine:
+This class implements a thread-safe singleton to avoid loading the model
+more than once per process. Use `NLLBEngine()` to get the global instance.
+
+Line ~40:
+def __new__(...):
+The `__new__` method returns the existing singleton if present. This is
+where we prevent multiple in-memory model copies.
+
+Line ~70:
+def __init__(...):
+We only set lightweight fields in `__init__`. Heavy work is deferred to
+`_ensure_loaded()` so imports remain fast and tests can instantiate the
+engine without immediate downloads.
+
+Line ~100:
+def translate(...):
+`translate` ensures the model is loaded, prepares tokens (optionally forcing
+the BOS token for the target language), runs generation, and decodes output.
+
+Line ~140:
+def _ensure_loaded(self):
+This method loads the tokenizer and model from Hugging Face the first time
+it is needed. Note: this can download large files and may require HF auth.
+
+Line ~190:
+def close(self):
+Provide an explicit cleanup method to free memory and clear CUDA caches on
+shutdown or during tests.
+
+ADDED SECTION: APP/TRANSLATION/TRANSLATOR.PY
+
+Line 1:
+"""Translator service that uses `NLLBEngine`.
+This docstring explains that the Translator is a small wrapper that
+delegates real translation to `NLLBEngine` while handling service-level
+concerns like logging and optional detection.
+
+Line ~30:
+def __init__(...):
+Translator accepts either a pre-made engine (for DI/testing) or constructs
+the singleton `NLLBEngine` itself and records ownership to decide whether to
+call `close()` later.
+
+Line ~60:
+def translate(...):
+This method is intentionally lightweight: it logs request metadata, times
+the operation, and forwards the call to the engine's `translate`.
+
+
+APP/UTILS/LOGGER.PY
+
+Line 1:
+"""Logger for the translation system."""
+This module docstring explains that this file contains logging setup for the project.
+
+Line 3:
+import logging
+This imports Python's built-in logging module.
+It provides tools for writing messages like info, warning, and error.
+
+Line 5:
+def get_logger(name: str) -> logging.Logger:
+This defines a function that creates or returns a logger.
+The input should be a text name, and the function returns a Logger object.
+
+Line 6:
+# Get (or create) the logger for this name.
+This comment explains that Python will reuse an existing logger if one already exists.
+
+Line 7:
+logger = logging.getLogger(name)
+This gets a logger with the given name.
+If the logger already exists, Python returns the same one instead of making a new one.
+
+Line 8:
+# INFO shows normal progress, warnings, and errors without too much noise.
+This comment explains why INFO is used as the default level.
+
+Line 9:
+logger.setLevel(logging.INFO)
+This sets the minimum log level to INFO.
+That means info, warning, error, and critical messages will show up.
+
+Line 11:
+# Only add a handler once so the same message does not print multiple times.
+This comment explains why we check for handlers before adding one.
+
+Line 12:
+if not logger.handlers:
+This checks whether the logger already has output handlers.
+If it does not, we add one.
+
+Line 13:
+# StreamHandler sends logs to the console/terminal.
+This comment explains where the logs will appear.
+
+Line 14:
+handler = logging.StreamHandler()
+This creates a console handler.
+It sends log messages to the terminal window.
+
+Line 15:
+# Format each log line so it includes time, logger name, level, and message.
+This comment explains the purpose of the formatter.
+
+Line 16:
+formatter = logging.Formatter(
+This starts a formatter object.
+A formatter decides how each log line should look.
+
+Line 17:
+    "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+This is the format string.
+It tells Python to print the time, logger name, level name, and message in one line.
+
+Line 18:
+)
+This closes the formatter creation.
+
+Line 19:
+# Attach the format to the handler.
+This comment explains that the formatter is being connected to the output handler.
+
+Line 20:
+handler.setFormatter(formatter)
+This applies the formatting rules to the handler.
+
+Line 21:
+# Connect the handler to the logger so messages actually appear.
+This comment explains that the logger needs a handler to show output.
+
+Line 22:
+logger.addHandler(handler)
+This attaches the handler to the logger.
+Without this, the logger would not print anything.
+
+Line 24:
+# Hand the configured logger back to the caller.
+This comment explains that the function is returning the ready-to-use logger.
+
+Line 25:
+return logger
+This returns the logger object so other files can use it.
+
+ADDED SECTION: APP/ASR/TRANSCRIPTION.PY
+
+Line 1:
+"""Transcription service for handling audio transcription tasks."""
+Module docstring that says what this file is for.
+
+Line 3:
+from __future__ import annotations
+Allows modern type hints to be treated as strings internally, which helps avoid import-order issues.
+
+Line 5:
+from pathlib import Path
+Imports Path so file inputs can be handled cleanly.
+
+Line 6:
+from typing import Any
+Imports Any for flexible dictionary typing in return values.
+
+Line 7:
+import numpy as np
+Imports NumPy type support for in-memory audio arrays.
+
+Line 9:
+from app.asr.whisper_engine import WhisperEngine
+Imports the low-level ASR engine wrapper used by this service.
+
+Line 12:
+class TranscriptionService:
+Defines the high-level service class for transcription calls.
+
+Line 13:
+# Keep the service lightweight: if no engine is provided, build one lazily.
+Comment that explains the design choice for initialization.
+
+Line 14:
+def __init__(self, engine: WhisperEngine | None = None):
+Constructor accepts an optional pre-built engine.
+
+Line 15:
+self.engine = engine or WhisperEngine()
+Uses provided engine or creates a default one.
+
+Line 17:
+def transcribe(...):
+Main public API method for transcription.
+
+Line 22:
+# Delegate model work to the engine, then normalize the output shape.
+Comment explains this function separates model call from formatting.
+
+Line 23:
+raw_result = self.engine.transcribe(audio, language=language)
+Calls the lower-level engine with user input.
+
+Line 24:
+return self._format_result(raw_result)
+Returns a normalized response dictionary.
+
+Line 26:
+def _format_result(self, raw_result: dict[str, Any]) -> dict[str, Any]:
+Private helper to keep output structure consistent.
+
+Line 27:
+# Ensure text is always a clean string for API callers.
+Comment explains text cleanup purpose.
+
+Line 28:
+text = str(raw_result.get("text", "")).strip()
+Converts transcript to string and removes extra whitespace.
+
+Line 29:
+# Use an empty list if segment details are missing.
+Comment explains safe default for segments.
+
+Line 30:
+segments = raw_result.get("segments", [])
+Reads segment list or falls back to empty list.
+
+Line 32-37:
+return {...}
+Returns final stable schema with text, segments, language, and duration.
+
+ADDED SECTION: APP/ASR/WHISPER_ENGINE.PY
+
+Line 1:
+"""Model wrapper for faster-whisper transcription."""
+Module docstring describing file purpose.
+
+Line 3:
+from __future__ import annotations
+Enables forward references in type hints.
+
+Line 5-13:
+imports
+Imports I/O helpers, typing, NumPy, soundfile, torch, and WhisperModel.
+
+Line 16:
+class WhisperEngine:
+Defines the singleton wrapper around faster-whisper.
+
+Line 17-18:
+_instance and _lock
+Class-level state for thread-safe singleton creation.
+
+Line 20:
+def __new__(...):
+Controls one-time instance creation.
+
+Line 21:
+# Create exactly one engine instance so model loading happens once per process.
+Explains why singleton behavior exists.
+
+Line 22-25:
+with cls._lock ...
+Ensures thread-safe instance creation.
+
+Line 28:
+def __init__(...):
+Initializes model configuration and loading.
+
+Line 29:
+# Skip re-initialization when the singleton already finished setup.
+Explains early return guard.
+
+Line 30-31:
+if getattr(...): return
+Avoids reloading the model multiple times.
+
+Line 34:
+self.model_name = model_name
+Stores selected model size/name.
+
+Line 35:
+# Use GPU when available; otherwise default to CPU for compatibility.
+Comment explains automatic device selection.
+
+Line 36:
+self.device = ...
+Chooses CUDA if available, else CPU.
+
+Line 37:
+# Choose a default compute type that matches the selected device.
+Explains compute precision choice.
+
+Line 38:
+self.compute_type = ...
+Selects float16 on GPU or int8 on CPU.
+
+Line 39:
+self.model = WhisperModel(...)
+Loads the actual faster-whisper model.
+
+Line 40:
+self._initialized = True
+Marks singleton as initialized.
+
+Line 42:
+def transcribe(...):
+Main inference method used by services/scripts.
+
+Line 47:
+# Normalize all accepted audio inputs into what faster-whisper expects.
+Comment explains input normalization step.
+
+Line 48:
+audio_source, temp_file = self._prepare_audio(audio)
+Converts any input type to normalized model input.
+
+Line 50-56:
+segments_iter, info = self.model.transcribe(...)
+Runs model inference and returns segment iterator plus metadata.
+
+Line 57-60:
+finally ... temp_file.unlink
+Cleanup hook for temporary decoded files.
+
+Line 62-70:
+segments list comprehension
+Converts model segment objects into plain dictionaries.
+
+Line 72:
+# Drop blank segments so the final transcript is easier to consume.
+Comment explains post-filtering behavior.
+
+Line 73-77:
+segments = [... if segment["text"]]
+Keeps only segments with non-empty text.
+
+Line 79:
+# Join segment text into one plain transcript string.
+Comment for final text assembly.
+
+Line 80:
+text = " ".join(...)
+Builds single transcript string from segment texts.
+
+Line 82-87:
+return {...}
+Returns transcript, segment list, language, and duration metadata.
+
+Line 89:
+def _prepare_audio(...):
+Helper that routes different input types to correct loaders.
+
+Line 92:
+# Accept raw numpy audio directly.
+Explains ndarray path.
+
+Line 93-94:
+if isinstance(audio, np.ndarray): ...
+Normalizes in-memory array and returns it.
+
+Line 96:
+# Accept pathlib file paths.
+Comment for Path handling.
+
+Line 97-98:
+if isinstance(audio, Path): ...
+Loads audio from Path object.
+
+Line 100:
+# Accept string file paths.
+Comment for str handling.
+
+Line 101-102:
+if isinstance(audio, str): ...
+Converts string path then loads audio.
+
+Line 104:
+# Accept in-memory byte payloads.
+Comment for bytes handling.
+
+Line 105-106:
+if isinstance(audio, bytes): ...
+Decodes audio bytes.
+
+Line 108:
+raise TypeError(...)
+Protects method from unsupported input types.
+
+Line 110:
+def _load_audio_file(...)
+Loads audio from disk path.
+
+Line 111-112:
+if not path.exists(): raise FileNotFoundError
+Clear error for missing file.
+
+Line 114:
+# Read as float32 for stable model input.
+Comment for dtype choice.
+
+Line 115-116:
+sf.read(...) then normalize
+Reads audio and converts to expected format.
+
+Line 118:
+def _load_audio_bytes(...)
+Loads audio from raw bytes.
+
+Line 119:
+buffer = io.BytesIO(audio)
+Creates in-memory file-like object.
+
+Line 120:
+# Decode bytes through soundfile exactly like file-based reads.
+Comment for consistent decode flow.
+
+Line 121-122:
+sf.read(...) then normalize
+Decodes bytes and normalizes array.
+
+Line 124:
+def _normalize_numpy_audio(...)
+Ensures channel and dtype consistency.
+
+Line 125:
+# Force ndarray so downstream operations are consistent.
+Comment for array conversion.
+
+Line 126:
+array = np.asarray(audio)
+Converts any compatible input into ndarray.
+
+Line 128:
+# If audio has multiple channels, average to mono.
+Comment for stereo-to-mono conversion.
+
+Line 129-130:
+if array.ndim == 2: array = array.mean(axis=1)
+Reduces 2D multi-channel audio to 1D mono audio.
+
+Line 132:
+# Ensure dtype matches what the transcription backend expects.
+Comment for float32 normalization.
+
+Line 133-134:
+if array.dtype != np.float32: array = array.astype(np.float32)
+Coerces dtype to float32.
+
+Line 136:
+return array
+Returns clean audio array.
+
+ADDED SECTION: SCRIPTS/ASR_RUNNER.PY
+
+Line 1-6:
+module docstring
+Explains this script now unifies fixture run and model-compare workflows.
+
+Line 8:
+from __future__ import annotations
+Enables forward-reference-friendly type hints.
+
+Line 10-16:
+imports
+Imports CLI parsing, subprocess/tempfile for decode fallback, dotenv, ffmpeg helper, and ASR classes.
+
+Line 21:
+load_dotenv(...)
+Loads project `.env` so HF_TOKEN is available automatically.
+
+Line 24:
+def _transcribe_with_fallback(...)
+Wrapper that retries transcription via ffmpeg decode when direct read fails.
+
+Line 27:
+return service.transcribe(path)
+Fast path for normal, readable audio files.
+
+Line 28-29:
+except Exception as exc: ffmpeg = ...
+Fallback begins when direct transcription fails.
+
+Line 30-32:
+NamedTemporaryFile(...)
+Creates temp WAV file target for decoded audio.
+
+Line 35-40:
+subprocess.run([...ffmpeg...])
+Decodes source audio to mono 16k WAV for robust ASR input.
+
+Line 41:
+return service.transcribe(tmp_path)
+Transcribes decoded temporary file.
+
+Line 42-43:
+except Exception: raise RuntimeError(...)
+Provides clear error if both direct and fallback paths fail.
+
+Line 44-45:
+finally: tmp_path.unlink(...)
+Deletes temporary WAV to avoid file buildup.
+
+Line 48:
+def run_fixtures(model_name: str) -> None:
+Runs one model across all detected fixture files.
+
+Line 50:
+fixture_dir = Path("tests/fixtures/asr")
+Points to expected fixture location.
+
+Line 51-54:
+files = sorted([...]) if fixture_dir.exists() else []
+Discovers fixture files dynamically so hardcoded names are not required.
+
+Line 56-58:
+if not files: print(...); return
+Exits gracefully when no fixtures are present.
+
+Line 60-61:
+engine/service construction
+Initializes ASR engine and service for fixture loop.
+
+Line 63-73:
+for each fixture, transcribe and print details
+Per file: validates existence, runs fallback transcription, prints text/language/segments.
+
+Line 76:
+def compare_models(models: list[str], target_file: Path) -> None:
+Compares one target file across multiple model sizes.
+
+Line 78-79:
+target existence check
+Raises clear error when compare file is missing.
+
+Line 81-88:
+loop per model and print output
+Builds a model+service per model and prints comparable outputs.
+
+Line 91:
+def parse_args() -> argparse.Namespace:
+Defines CLI arguments for both modes.
+
+Line 93-114:
+parser.add_argument(...) blocks
+Adds mode/model/models/file options with beginner-friendly help text.
+
+Line 115:
+return parser.parse_args()
+Returns parsed command-line options.
+
+Line 118:
+def main() -> None:
+Entry point dispatcher for selected mode.
+
+Line 121-123:
+if fixtures mode -> run_fixtures
+Runs fixtures workflow and exits main early.
+
+Line 125:
+compare_models(...)
+Runs compare workflow otherwise.
+
+Line 128-129:
+if __name__ == "__main__": main()
+Standard script entrypoint guard.
+
+ADDED SECTION: TESTS/TEST_ASR.PY
+
+Line 1:
+"""Tests for the ASR module."""
+Module docstring describing test scope.
+
+Line 3:
+from __future__ import annotations
+Future import for modern type hints.
+
+Line 5-10:
+imports
+Imports time/path/pytest and ASR classes used in test cases.
+
+Line 13:
+FIXTURE_DIR = ...
+Central fixture folder path used by all tests.
+
+Line 16:
+def _is_usable_audio(path: Path) -> bool:
+Helper to check whether a fixture exists and is non-empty.
+
+Line 17:
+# Basic sanity check so tests skip cleanly when fixture files are missing.
+Comment explains why this helper exists.
+
+Line 18:
+return path.exists() and ...
+Returns true only for valid fixture files.
+
+Line 21:
+@pytest.fixture(scope="module")
+Creates one shared fixture object for all tests in this file.
+
+Line 22:
+def service() -> TranscriptionService:
+Builds reusable ASR service for tests.
+
+Line 23:
+# Reuse one engine for all tests ...
+Comment explains performance reason for shared engine.
+
+Line 24-25:
+engine creation + return service
+Creates `small` model engine and wraps in service.
+
+Line 28:
+@pytest.mark.parametrize(...)
+Runs same test logic over multiple fixture filenames.
+
+Line 36:
+def test_speech_audio_transcription(...)
+Main smoke test for speech-like fixtures.
+
+Line 37:
+# Build the full path ...
+Comment explains fixture path construction.
+
+Line 38-40:
+path build + skip if missing
+Skips gracefully when fixture is unavailable.
+
+Line 42:
+# Measure runtime so extremely slow regressions are caught.
+Comment explains performance safeguard.
+
+Line 43-45:
+timer start, transcribe, elapsed
+Measures how long transcription takes.
+
+Line 47-49:
+basic assertions
+Checks result shape and max runtime threshold.
+
+Line 51-53:
+smoke-test assertion
+Accepts either non-empty transcript or non-empty segments.
+
+Line 56:
+def test_silence_transcription(service):
+Test for near-silent fixture behavior.
+
+Line 57:
+# Silence input should not generate meaningful transcript text.
+Comment explains expected outcome.
+
+Line 58-60:
+build path + skip if missing
+Ensures clean skip behavior when silence fixture is absent.
+
+Line 62-63:
+transcribe + transcript extraction
+Runs inference and trims text.
+
+Line 65-67:
+final assertions
+Asserts valid segment shape and expected silence behavior.
+
+END OF BREAKDOWN

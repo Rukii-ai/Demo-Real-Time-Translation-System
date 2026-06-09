@@ -1,0 +1,8 @@
+.env
+.venv/
+__pycache__/
+*.py[cod]
+*.pyd
+*.so
+*.dll
+.pytest_cache/

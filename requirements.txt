@@ -21,6 +21,7 @@ torchaudio
 transformers
 sentence-transformers
 accelerate
+sentencepiece
 optimum
 
 # =========================
@@ -50,7 +51,7 @@ silero-vad
 piper-tts
 
 # Optional alternative TTS
-TTS
+# TTS  # optional - requires Microsoft C++ Build Tools on Windows to build native extensions
 
 # =========================
 # VECTOR SEARCH / EMBEDDINGS

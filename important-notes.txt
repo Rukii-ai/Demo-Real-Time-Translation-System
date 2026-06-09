@@ -1,0 +1,546 @@
+Think of a Python decorator as gift wrapping for a function.
+When you wrap a present, you do not change what is inside the box. Instead, you add a nice bow on the outside to make it look or behave differently.
+In Python, a decorator lets you "wrap" a piece of code (a function) with extra code to give it new powers without changing the original code itself.
+The Real-World Analogy: The Security Guard
+Imagine you have a building called enter_vault(). Anyone can just walk right in.
+python
+def enter_vault():
+    print("Opening the vault door...")
+Use code with caution.
+Now, you want to make sure people are logged in before they enter. Instead of rewriting the code inside enter_vault() (and every other room in your building), you hire a Security Guard (the decorator).
+The guard stands at the door, checks the ID, and then lets the person inside.
+How It Looks in Code
+Python uses a shortcut symbol, the @ sign, to apply a decorator. You just put it right above your function.
+python
+# The Security Guard (Decorator)
+def security_guard(original_function):
+    def wrapper():
+        print("[Guard]: Checking your ID...")  # Extra behavior before
+        original_function()                     # The actual function runs
+        print("[Guard]: Locking up behind you.") # Extra behavior after
+    return wrapper
+
+# Applying the decorator using @
+@security_guard
+def enter_vault():
+    print("-> Opening the vault door...")
+
+# Run the function
+enter_vault()
+Use code with caution.
+The Output
+When you run enter_vault(), this happens automatically:
+text
+[Guard]: Checking your ID...
+-> Opening the vault door...
+[Guard]: Locking up behind you.
+
+
+using async def for logger is a bad decision
+
+
+A good beginner workflow is:
+
+Set up the virtual environment.
+Install dependencies.
+Add the simple root route.
+Add the logger.
+Run the app and confirm the route works.
+Watch the logs and make sure output appears the way you expect.
+
+
+explain Enables modern type-hint behavior. Type hint: optional metadata that says what type a variable/function expects. what modern type-hint behavior is and what type hints are in a comprehensive, easy to understand and beginner-friendly way make use of analogies where necessary18:01Type hints are labels you add to your code to specify what kind of data a variable, function parameter, or return value should be.What Are Type Hints?Think of type hints like luggage tags at an airport. The tag does not physically stop you from putting shoes into a suitcase marked "Books," but it tells the handlers exactly what should be inside.In programming, type hints tell you and your tools whether a variable expects a text string, a whole number, or a list.Classic ExampleWithout type hints, a Python function is a mystery box:pythondef greet(name):
+    return "Hello, " + name
+Use code with caution.With type hints, the expectations are crystal clear:pythondef greet(name: str) -> str:
+    return "Hello, " + name
+Use code with caution.The : str means name must be text. The -> str means the function outputs text.What is "Modern" Type-Hint Behavior?"Modern" type hinting refers to recent updates in Python (specifically Python 3.9 and 3.10) that made these labels much cleaner, simpler, and closer to plain English.Before these modern updates, writing complex type hints was like dealing with heavy bureaucracy—you had to import special, clunky words from a specific library called typing.Here is how modern changes fixed this:1. Native Collections (Python 3.9+)Old Way: You had to import a special capital-letter List or Dict to hint at collections of data.pythonfrom typing import List
+numbers: List[int] = [1, 2, 3]
+Use code with caution.Modern Way: You just use the standard, everyday words you already use to write code.pythonnumbers: list[int] = [1, 2, 3]
+Use code with caution.2. The OR Operator (Python 3.10+)Sometimes a variable can accept more than one type of data. Imagine a price tag that can be a whole number (4) or a decimal (4.99).Old Way: You had to import Union and write a complex statement.pythonfrom typing import Union
+price: Union[int, float] = 4.99
+Use code with caution.Modern Way: You use the pipe symbol |, which literally means "or." It reads exactly like a standard sentence.pythonprice: int | float = 4.99
+Use code with caution.3. Simplified Optional ValuesIf a value is allowed to be missing or empty (None), modern Python handles this beautifully.Old Way: from typing import Optional followed by Optional[str].Modern Way: str | None (meaning: "This is either text or nothing").Why Should beginners Use Modern Type Hints?Autofit & Auto-complete: Your code editor reads these hints and suggests the right commands as you type.Instant Error Catching: Tools like mypy can read your code and warn you about mistakes before you run the program.Living Documentation: You do not need to write long comments explaining what a function needs; the type hints explain it instantly.Would you like to explore how to set up a static type checker like mypy in your code editor to catch these errors automatically?
+
+
+def transcribe(self, audio: str | Path | bytes | np.ndarray,
+                   language: str | None = None,) -> dict[str, Any]:
+        # Delegate model work to the engine, then normalize the output shape.
+        raw_result = self.engine.transcribe(audio, language=language)
+        return self._format_result(raw_result)
+
+    def _format_result(self, raw_result: dict[str, Any]) -> dict[str, Any]:
+        # Ensure text is always a clean string for API callers.
+        text = str(raw_result.get("text", "")).strip()
+        # Use an empty list if segment details are missing.
+        segments = raw_result.get("segments", [])
+
+        return {
+            "text": text,
+            "segments": segments,
+            "language": raw_result.get("language"),
+            "duration": raw_result.get("duration"),
+        }
+
+what does the underscore in the other function definiton mean and how come the fuction was called before it was defined?Here are the answers to your two excellent questions about the underscore and the order of the functions.1. What does the underscore (_) mean?The single underscore at the beginning of _format_result is a strong warning sign to other programmers. It means this function is private and meant for internal use only.The "Staff Only" AnalogyThink of a restaurant.The transcribe function is the Main Dining Room. It is open to the public (any user can call it).The _format_result function is the Kitchen. Customers should not walk into the kitchen directly. The waiters use the kitchen behind the scenes to prepare the food before serving it.Why do this?Python does not physically stop someone from calling object._format_result(). However, the underscore tells other developers: "Hey, this is an internal helper tool. Don't rely on it directly, because I might change how it works tomorrow without warning you."2. How can a function be called before it is defined?In Python, the order of methods inside a class does not matter. You can safely call a method on line 5 even if you do not define it until line 10.This works because of how Python reads and runs code in two distinct phases:Phase 1: The Blueprint Phase (Reading)When you run your script, Python first scans the entire class file from top to bottom. It does not execute the code inside the functions yet. It simply makes a mental checklist of what functions exist.Python's thought process: "Okay, I see a class. Inside it, there is a function called transcribe and a function called _format_result. Got it."Phase 2: The Execution Phase (Running)Much later, when a user actually calls object.transcribe(), Python executes the code inside that function line-by-line. When it hits self._format_result(), it looks at its checklist from Phase 1, sees that _format_result exists, and runs it perfectly.As long as both functions are written inside the class before you actually trigger the code, Python will always find them.
+
+
+Here is the explanation of these three core programming concepts, which are all about how your code handles data and manages speed.1. In-Memory Stream Tools (io)Normally, when your program reads or writes data, it communicates with your computer's physical hard drive (like saving a .txt file or loading an .mp3 file). This is slow.The io module provides in-memory stream tools (like io.StringIO for text or io.BytesIO for binary data). This allows you to fake a file completely inside your computer's RAM (temporary memory).The Analogy: Imagine writing a rough draft of a letter. You could write it on a piece of paper and mail it to yourself (saving to a hard drive). Or, you could just scribble it on a dry-erase whiteboard in front of you, use it immediately, and wipe it away (in-memory stream).Why use it?: It is incredibly fast. If an AI library expects you to give it a file path on your hard drive, but you downloaded the audio directly from the internet, you can use io.BytesIO to pass that audio directly to the AI without wasting time writing a real file to disk.2. Lock: Thread Synchronization PrimitiveTo understand a Lock, you first need to know that a thread is like a worker running a line of code. If you have multiple threads running at the same time, they might try to change the exact same piece of data at the exact same split-second. This causes data corruption.A Lock is a tool used to force your code workers to take turns.The Analogy: Think of a single-person public restroom.The Lock is the physical bolt on the door.When a worker (thread) goes inside, they slide the bolt shut (Acquiring the lock).If five other workers arrive, they must wait in line outside.When the first worker finishes, they unlock the door (Releasing the lock), allowing the next person in line to enter safely.In Code: It prevents two processes from modifying a file, a variable, or an AI model at the exact same time.3. Thread-Safe: Safe When Multiple Threads Run at OnceWhen a piece of code, a function, or an entire library is labeled thread-safe, it means the code has built-in protections (like the Lock mentioned above) to guarantee it will not break or corrupt data if multiple threads access it simultaneously.The Analogy: Imagine a bank account where two people have debit cards linked to it.Not Thread-Safe: Both people swipe their cards at the exact same millisecond to spend the last ₦10,000 in the account. The system processes both instantly, the account drops to minus ₦10,000, and the bank system glitches out.Thread-Safe: The bank system forces one transaction to process a microsecond before the other. The first person gets the money, the balance drops to ₦0, and the second person's card is safely declined.In Audio/AI: If your transcribe function is thread-safe, it means five different users can upload audio files to your web server at the exact same time, and your code will safely queue them up or process them without crashing the underlying AI model.
+
+class WhisperEngine:
+    _instance: WhisperEngine | None = None
+    _lock = Lock()
+
+    def __new__(cls, model_name: str = "base", device: str | None = None, compute_type: str | None = None):
+        # Create exactly one engine instance so model loading happens once per process.
+        with cls._lock:
+            if cls._instance is None:
+                cls._instance = super().__new__(cls)
+        return cls._instance
+
+
+Explain this syntax. Explain why isn't it using self.This code pattern is called a Singleton Design Pattern. Its sole purpose is to guarantee that your program creates exactly one instance of the WhisperEngine class, no matter how many times you try to create a new one.Loading an AI model into your computer's memory takes a lot of time and RAM. This code ensures the model loads exactly once, saving your system from crashing.Part 1: Why isn't it using self?To understand why there is no self, you have to look at the difference between __init__ and __new__:self represents an object that already exists. In a standard __init__(self) function, Python has already built the object in memory and passes it to you as self so you can customize it.__new__ is the actual factory constructor. It runs before the object exists. Its job is to physically build the object from scratch and return it.cls represents the Class itself. Because no object instance exists yet when __new__ runs, Python passes the class blueprint (cls) as the first argument instead of self.Part 2: Step-by-Step Syntax ExplanationLet's break down the code lines to see how the single instance is safely controlled.1. The Class Variablespython_instance: WhisperEngine | None = None
+_lock = Lock()
+Use code with caution.Because these are written directly inside the class (and not inside a function), they are Class-level variables shared by everyone._instance: This keeps track of our single engine object. It starts as None because no engine has been built yet._lock: This is the Lock we discussed earlier. It is shared across the entire class to make sure multiple threads don't try to build the engine at the exact same millisecond.2. The Method Headerpythondef __new__(cls, model_name: str = "base", ...):
+Use code with caution.Instead of building a normal object, we intercept Python's object creation process using __new__ and the class blueprint cls.3. Securing the Thread Lockpythonwith cls._lock:
+Use code with caution.The with statement automatically acquires the lock when code enters this block, and automatically releases it when it leaves. If Thread A is currently inside this block creating the engine, Thread B is forced to wait patiently outside.4. The Gatekeeper Checkpythonif cls._instance is None:
+    cls._instance = super().__new__(cls)
+Use code with caution.if cls._instance is None: This checks if an engine has ever been built before.super().__new__(cls): If the answer is no, it calls Python's deep internal systems (super()) to physically allocate memory and manufacture the brand-new WhisperEngine object.It saves that newly created object directly into our class tracker: cls._instance.5. The Returnpythonreturn cls._instance
+Use code with caution.If a second user runs WhisperEngine() later, the if check will see that cls._instance is already holding an engine. It will skip the factory creation entirely and simply return the exact same engine that was built the first time.
+
+so you're saying when you're turning an ai model into a class that class as an object needs to be contructed using new but creating classes of existing object types just requires selfNot quite, but you are very close to a massive lightbulb moment! Let's clarify how Python builds objects under the hood.Every single class in Python—whether it is an AI model, a simple user account, or a custom list—uses both __new__ and __init__ behind the scenes.The only reason we are explicitly writing out __new__ here is because we want to change Python's default behavior and enforce a strict limit of exactly one object.Here is the exact step-by-step breakdown of how Python normally creates objects versus how this specific AI model does it:The Normal Way (95% of your code)When you create a standard class (like a User profile), you do not write __new__. You only write __init__(self).When you run user1 = User(), Python automatically does two things in a specific order:The Factory Step (__new__): Python secretly runs a default __new__ behind the scenes to allocate space in your computer's RAM and manufacture a raw, empty object.The Decorator Step (__init__): Python takes that brand-new object, hands it to your code as self, and runs your __init__ function to fill it with data (like self.name = "Alice").If you run user2 = User(), Python repeats the cycle and gives you a brand-new, completely separate memory space.The AI Model Way (The Singleton exception)For standard data types, creating 10 different objects is cheap and fast. But loading a heavy AI model into memory takes massive resources. If your app created a fresh, separate AI engine every time a user hit a button, your computer would instantly run out of RAM and crash.To prevent this, we intentionally override the secret Factory Step (__new__) ourselves.Our custom __new__ acts as a gatekeeper.When the first user asks for an engine, __new__ runs, manufactures the object, and saves it to a master variable (_instance).When a second user calls WhisperEngine(), our custom __new__ stops Python from building a fresh object. It intercepts the request and says: "Nope, we already have one running in memory. Take this old one instead."Summary Rule of ThumbUse self inside __init__ when you want a standard class where every single time you call it, it creates a unique, independent object.Use cls inside __new__ only when you need to control, limit, or modify how the object is physically spawned in your computer's memory (like enforcing a strict one-object limit).
+
+def transcribe(self, audio: str | Path | bytes | np.ndarray, 
+                   language: str | None = None, task: str = "transcribe",
+                   ) -> dict[str, Any]:
+        # Normalize all accepted audio inputs into what faster-whisper expects.
+        audio_source, temp_file = self._prepare_audio(audio)
+
+        try:
+            segments_iter, info = self.model.transcribe(
+                audio_source,
+                language=language,
+                task=task,
+            )
+        finally:
+            if temp_file is not None:
+                temp_file.unlink(missing_ok=True)
+
+        segments = [
+            {
+                "start": float(segment.start),
+                "end": float(segment.end),
+                "text": segment.text.strip(),
+            }
+            for segment in segments_iter
+        ]
+
+        # Drop blank segments so the final transcript is easier to consume.
+        segments = [
+            segment
+            for segment in segments
+            if segment["text"]
+        ]
+
+        # Join segment text into one plain transcript string.
+        text = " ".join(segment["text"] for segment in segments).strip()
+
+        return {
+            "text": text,
+            "segments": segments,
+            "language": getattr(info, "language", language),
+            "duration": getattr(info, "duration", None),
+        }
+
+
+Please explain th e syntax for this code in a comprehnsive, easy to understand and beginner friednly wayThis code defines a Python function that converts spoken audio into written text using a specialized AI library named faster-whisper.Here is a breakdown of how the syntax works, step by step, written for beginners.1. The Function Definition (The Header)pythondef transcribe(self, audio: str | Path | bytes | np.ndarray, 
+               language: str | None = None, task: str = "transcribe",
+               ) -> dict[str, Any]:
+Use code with caution.def transcribe(self, ...): This defines a method named transcribe. The self keyword means this function lives inside a larger structure called a Class (an object blueprint).Type Hinting (audio: str | Path | bytes ...): The colon : and vertical bars | (meaning "or") are type hints. They tell the developer that the audio input can accept a file path string, a Path object, raw audio bytes, or a NumPy array data structure.Default Arguments (task: str = "transcribe"): The = sign sets a default value. If you do not specify a task when calling the function, it automatically assumes you want to "transcribe" (audio to text) instead of "translate" (audio to English text).Return Type (-> dict[str, Any]): The arrow -> specifies what the function gives back. Here, it returns a dictionary (dict) where the keys are words (str) and the values can be anything (Any).2. Audio Preparation and Cleanuppythonaudio_source, temp_file = self._prepare_audio(audio)
+try:
+    # ... code runs here ...
+finally:
+    if temp_file is not None:
+        temp_file.unlink(missing_ok=True)
+Use code with caution.try ... finally: This structure guarantees safety. No matter what happens inside the try block (even if the code crashes), the finally block must run.temp_file.unlink(...): This deletes the temporary audio file from your hard drive so your computer does not run out of storage space.3. The Core AI Transcriptionpythonsegments_iter, info = self.model.transcribe(audio_source, language=language, task=task)
+Use code with caution.Unpacking: The AI model returns two distinct things at the same time: an iterator of audio segments (segments_iter) and structural metadata about the audio (info). Python allows you to save them into two variables at once using a comma.4. List Comprehensions (Data Formatting)pythonsegments = [
+    {
+        "start": float(segment.start),
+        "end": float(segment.end),
+        "text": segment.text.strip(),
+    }
+    for segment in segments_iter
+]
+Use code with caution.[item for item in iterable]: This is a list comprehension. It is a shorthand Python loop that builds a new list on the fly..strip(): This is a built-in string method that automatically cuts off accidental leading or trailing blank spaces from the text.5. Filtering Datapythonsegments = [segment for segment in segments if segment["text"]]
+Use code with caution.if segment["text"]: This adds a condition to the loop. In Python, an empty string "" evaluates to False. This line loops through your data and deletes any audio segment that contains absolutely no text (like dead silence).6. Returning the Final Packagepythontext = " ".join(segment["text"] for segment in segments).strip()
+return { ... }
+Use code with caution." ".join(...): This takes all the individual sentences from your segments and glues them together into one giant paragraph, separated by spaces.getattr(info, "language", language): This is a safe lookup function. It checks if the info object has a detected language. If it does not, it safely falls back to using the default language you provided
+
+
+What si the an iterator of audio segments (segments_iter)  and the metadata about the audio infoIn Python, when you call the Whisper AI model, it does not give you all the text at once. Instead, it gives you two specific objects to handle large amounts of data efficiently: segments_iter and info.Here is exactly what they are and how they work.1. The Iterator (segments_iter)An iterator is a special Python object that yields data one piece at a time instead of loading everything into your computer's memory at once.Think of it like streaming a movie instead of downloading the whole file before watching.What is inside it?segments_iter generates a sequence of individual Segment objects. Whisper automatically chops your audio into smaller, logical chunks (usually based on natural pauses or sentences). Each chunk contains:start: The exact timestamp (in seconds) when the person started speaking that sentence.end: The exact timestamp (in seconds) when the sentence ended.text: The actual words spoken during that specific time window.Why use an iterator?If you transcribe a 3-hour audio file, generating all the text at once could crash your computer's memory (RAM). Because segments_iter is an iterator, Python only processes one sentence at a time as your for loop requests it.2. The Metadata (info)The info object is a simple data container (technically a named tuple or object) that holds high-level details about the audio file itself, rather than the spoken text.It is populated by the AI model immediately after it analyzes the beginning of the audio track.What is inside it?The most common properties you pull from info include:language: The language the AI detected. For example, if you feed it a Spanish audio clip without telling it the language, info.language will output "es".language_probability: A confidence score (from 0.0 to 1.0) showing how sure the AI is about the detected language.duration: The total length of the audio file in seconds.duration_after_vad: The length of the audio after filtering out dead silence using Voice Activity Detection (VAD).How they look in actionIf you were to peek inside these variables during code execution, this is conceptually what they look like:python# 'info' is a single object with attributes
+print(info.language)  # Outputs: "en"
+print(info.duration)  # Outputs: 12.45
+
+# 'segments_iter' is stepped through using a loop
+for segment in segments_iter:
+    print(f"[{segment.start}s - {segment.end}s]: {segment.text}")
+
+# Output printed to screen line-by-line:
+# [0.0s - 2.5s]: Hello and welcome to the tutorial.
+# [2.6s - 5.1s]: Today we are learning Python.
+Use code with caution.
+
+I don't understand this part List Comprehensions (Data Formatting) explain more in depthList comprehensions can look intimidating because they compress multiple lines of code into a single line.Think of a list comprehension as a factory assembly line. It takes a raw list of items, modifies each item one by one, and packs the results into a brand-new list.The Anatomy of a List ComprehensionEvery basic list comprehension follows this exact blueprint formula:\(\text{[\ }\textbf{output\_expression}\text{\ for\ }\textbf{item}\text{\ in\ }\textbf{iterable}\text{\ ]}\)[ and ]: These brackets tell Python, "We are building a brand-new list."for item in iterable: This is the traditional loop part. It grabs one item at a time from your source data.output_expression: This is what you want to do to that item before dropping it into your new list.Deconstructing the Code ExampleLet’s look at the exact block of code from your transcription script:pythonsegments = [
+    {
+        "start": float(segment.start),
+        "end": float(segment.end),
+        "text": segment.text.strip(),
+    }
+    for segment in segments_iter
+]
+Use code with caution.How it reads in plain English:"Create a new list called segments. To build it, look at every raw segment inside our segments_iter stream. For every single one, extract its start time, end time, and text, package those three pieces into a clean Python dictionary {}, and add that dictionary to our new list."Comparison: Traditional Loop vs. List ComprehensionTo truly understand it, look at how you would write this exact same logic using a traditional for loop. Both of these code blocks do the exact same job:Option A: The Traditional Way (Longer)python# 1. Create an empty container first
+segments = []
+
+# 2. Start looping through the raw data
+for segment in segments_iter:
+    # 3. Format the raw data into a clean dictionary
+    clean_dictionary = {
+        "start": float(segment.start),
+        "end": float(segment.end),
+        "text": segment.text.strip(),
+    }
+    # 4. Manually push it into the container
+    segments.append(clean_dictionary)
+Use code with caution.Option B: The List Comprehension Way (Shorter)pythonsegments = [
+    {
+        "start": float(segment.start),
+        "end": float(segment.end),
+        "text": segment.text.strip(),
+    }
+    for segment in segments_iter
+]
+Use code with caution.Why did the author use Option B?Speed: List comprehensions run faster inside Python's underlying system than manual .append() loops.No Side Effects: You do not have to create a temporary variable (like clean_dictionary) just to hold data for a split second.Adding a Filter (The if condition)Later in your code, you see a second list comprehension that looks like this:pythonsegments = [segment for segment in segments if segment["text"]]
+Use code with caution.This uses an advanced blueprint formula:\(\text{[\ }\textbf{output}\text{\ for\ }\textbf{item}\text{\ in\ }\textbf{iterable}\text{\ }\textbf{if\ condition}\text{\ ]}\)Here, the output is just the segment itself (no modifications). But the if segment["text"] acts as a security guard at the factory door. If a segment has an empty text string "", Python treats it as False and throws it away. Only segments with actual text are allowed into the final list.Would you like to see how to rewrite that filtering step back into a traditional loop so you can compare them side-by-side?You said: . start and .end are attribute calls right?Yes, exactly! You are 100% correct.segment.start and segment.end are attribute calls (also frequently called object attributes or properties).Here is exactly what that means in Python:Variables Inside an ObjectIn Python, an object can hold variables inside itself. When a variable belongs to a specific object, it is called an attribute.segment is the object..start and .end are the attributes (the internal variables) storing the specific timestamps for that chunk of audio.The Dot Notation (.)The period . is the syntax Python uses to look inside an object. You are essentially telling Python: "Go look inside the segment object and grab the value stored in the variable named start."Attributes vs. MethodsIt helps to contrast attributes with methods so the syntax is crystal clear:Attributes (No Parentheses): These represent data/nouns. They just hold a static value. You do not use parentheses () to call them.Example: segment.start or segment.endMethods (With Parentheses): These represent actions/verbs. They are functions attached to an object that actually do work. You must use parentheses () to execute them.Example: segment.text.strip() — .strip() is a method call because it actively processes and cleans the text string.
+
+Explain this syntax in a beginner friendly manner
+
+"""Unified ASR helper script.
+
+This script combines two previous helpers:
+1) running ASR across all fixture files
+2) comparing outputs across multiple model sizes
+"""
+
+from __future__ import annotations
+
+import argparse
+import subprocess
+import tempfile
+from pathlib import Path
+
+from dotenv import load_dotenv
+import imageio_ffmpeg
+
+from app.asr.transcription import TranscriptionService
+from app.asr.whisper_engine import WhisperEngine
+
+# Load the project-level .env so HF_TOKEN is available when a model download is needed.
+load_dotenv(Path(__file__).resolve().parents[1] / ".env")
+
+
+def _transcribe_with_fallback(service: TranscriptionService, path: Path) -> dict:
+    """Try direct transcription first, then decode with ffmpeg if the file is mislabeled."""
+    try:
+        return service.transcribe(path)
+    except Exception as exc:
+        ffmpeg = imageio_ffmpeg.get_ffmpeg_exe()
+        with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp_file:
+            tmp_path = Path(tmp_file.name)
+
+        try:
+            subprocess.run(
+                [ffmpeg, "-y", "-i", str(path), "-ac", "1", "-ar", "16000", str(tmp_path)],
+                check=True,
+                capture_output=True,
+            )
+            return service.transcribe(tmp_path)
+        except Exception:
+            raise RuntimeError(f"Failed to transcribe '{path}' directly and after ffmpeg decode.") from exc
+        finally:
+            tmp_path.unlink(missing_ok=True)
+
+
+def run_fixtures(model_name: str) -> None:
+    """Transcribe all fixture files with one model and print outputs."""
+    fixture_dir = Path("tests/fixtures/asr")
+    # Discover fixtures dynamically so the script still works when fixture names change.
+    files = sorted(
+        [p.name for p in fixture_dir.iterdir() if p.is_file()]
+    ) if fixture_dir.exists() else []
+
+    if not files:
+        print(f"No fixture files found in: {fixture_dir}")
+        return
+
+    engine = WhisperEngine(model_name=model_name, device="cpu", compute_type="int8")
+    service = TranscriptionService(engine=engine)
+
+    for name in files:
+        path = fixture_dir / name
+        print(f"=== {name} ({model_name}) ===")
+        if not path.exists():
+            print("MISSING")
+            continue
+
+        result = _transcribe_with_fallback(service, path)
+        print(f"TEXT: {result['text']!r}")
+        print(f"LANGUAGE: {result['language']}")
+        print(f"SEGMENTS: {result['segments']}")
+        print()
+
+
+def compare_models(models: list[str], target_file: Path) -> None:
+    """Transcribe one target file with each model so you can compare quality/speed."""
+    if not target_file.exists():
+        raise FileNotFoundError(f"Target file not found: {target_file}")
+
+    for model_name in models:
+        print(f"=== {model_name} ===")
+        engine = WhisperEngine(model_name=model_name, device="cpu", compute_type="int8")
+        service = TranscriptionService(engine=engine)
+        result = _transcribe_with_fallback(service, target_file)
+        print(f"TEXT: {result['text']!r}")
+        print(f"LANGUAGE: {result['language']}")
+        print(f"SEGMENTS: {result['segments']}")
+        print()
+
+
+def parse_args() -> argparse.Namespace:
+    """Parse CLI arguments for choosing fixture run or model comparison mode."""
+    parser = argparse.ArgumentParser(description="Run ASR fixtures or compare ASR models.")
+    parser.add_argument(
+        "--mode",
+        choices=["fixtures", "compare"],
+        default="fixtures",
+        help="fixtures: run many fixture files with one model; compare: run one file with many models",
+    )
+    parser.add_argument(
+        "--model",
+        default="small",
+        help="Model used in fixtures mode (default: small)",
+    )
+    parser.add_argument(
+        "--models",
+        nargs="+",
+        default=["base", "small"],
+        help="Models used in compare mode (default: base small)",
+    )
+    parser.add_argument(
+        "--file",
+        default="tests/fixtures/asr/testfile_2.wav",
+        help="File used in compare mode",
+    )
+    return parser.parse_args()
+
+
+def main() -> None:
+    """Entry point that dispatches to the selected mode."""
+    args = parse_args()
+
+    if args.mode == "fixtures":
+        run_fixtures(model_name=args.model)
+        return
+
+    compare_models(models=args.models, target_file=Path(args.file))
+
+
+if __name__ == "__main__":
+    main()This Python script is a command-line tool designed to test and compare how different Whisper AI models convert audio files into text.Here is a beginner-friendly breakdown of how the syntax works, section by section.1. Imports and Setuppythonfrom __future__ import annotations
+import argparse
+# ... other imports ...
+from app.asr.transcription import TranscriptionService
+Use code with caution.from __future__ import annotations: This allows you to use clean modern type hints (like list[str] instead of the old List[str]) even if you are on an older version of Python.import: These lines pull in built-in Python tools (like argparse for reading user commands, and Path for handling file paths).from app.asr...: This imports custom Python classes (WhisperEngine and TranscriptionService) written by the developer elsewhere in this specific project.2. Loading Secret Keys (.env)pythonload_dotenv(Path(__file__).resolve().parents[1] / ".env")
+Use code with caution.__file__: A special Python variable that means "this current file"..resolve().parents[1] / ".env": This mathematically looks at the folder structure, moves up one folder level, and locates a hidden file named .env. This file safely loads passwords/tokens (like HF_TOKEN) needed to download AI models from the internet.3. The Fallback Function (Safety Net)pythondef _transcribe_with_fallback(service: TranscriptionService, path: Path) -> dict:
+Use code with caution.The Leading Underscore (_): Starting a function name with an underscore is a polite signal to other programmers saying, "This is an internal helper function. Do not call it from outside this file."try ... except Exception as exc: This is error handling. Python tries to transcribe the file directly. If the audio file is corrupted or formatted weirdly, instead of crashing, it jumps to the except block.subprocess.run(...): This launches an external software package (ffmpeg) installed on your computer. It converts the broken audio file into a clean, standard WAV file (16000Hz mono audio) so the AI can read it successfully.4. Running the Fixtures Modepythondef run_fixtures(model_name: str) -> None:
+    fixture_dir = Path("tests/fixtures/asr")
+    files = sorted([p.name for p in fixture_dir.iterdir() if p.is_file()])
+Use code with caution.fixture_dir.iterdir(): This opens up the folder containing your test audio files and looks at everything inside it.List Comprehension Filtering: The code [p.name for p in... if p.is_file()] builds a clean list containing only the names of actual files, automatically ignoring folders or hidden files.f"TEXT: {result['text']!r}": The !r syntax stands for "representation". It forces Python to print the text wrapped in quotation marks and shows hidden formatting marks (like \n for line breaks) so you can debug perfectly.5. Comparing Modelspythondef compare_models(models: list[str], target_file: Path) -> None:
+Use code with caution.This loops through a list of different AI model sizes (e.g., "base", "small", "large"). It runs the exact same audio file through each model one by one and prints the text results to the screen so you can easily visually compare which size gives the best accuracy.6. The Command-Line Interface (CLI) Parserpythondef parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(...)
+    parser.add_argument("--mode", choices=["fixtures", "compare"], default="fixtures")
+Use code with caution.This sets up the computer terminal interface. It gives your script options you can type in your terminal window.choices=[...]: This locks the user into selecting only valid menu options. If you type anything other than fixtures or compare, Python will reject it immediately.nargs="+": This means "one or more". It allows the user to pass a whole list of items separated by spaces in the terminal (e.g., --models base small large).7. The Gatekeeper Execution Blueprintpythonif __name__ == "__main__":
+    main()
+Use code with caution.This is a foundational Python standard. It asks: "Is this script being run directly by a user clicking 'run'?"If yes, it immediately executes the main() function.If no (because another script is just importing this file to steal a function), it stays quiet and does not execute anything automatically.Would you like to examine how to run this script in your terminal application using the custom arguments we just configured?You said: Explain the syntax here indepth
+
+ef _transcribe_with_fallback(service: TranscriptionService, path: Path) -> dict:
+    """Try direct transcription first, then decode with ffmpeg if the file is mislabeled."""
+    try:
+        return service.transcribe(path)
+    except Exception as exc:
+        ffmpeg = imageio_ffmpeg.get_ffmpeg_exe()
+        with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp_file:
+            tmp_path = Path(tmp_file.name)
+
+        try:
+            subprocess.run(
+                [ffmpeg, "-y", "-i", str(path), "-ac", "1", "-ar", "16000", str(tmp_path)],
+                check=True,
+                capture_output=True,
+            )
+            return service.transcribe(tmp_path)
+        except Exception:
+            raise RuntimeError(f"Failed to transcribe '{path}' directly and after ffmpeg decode.") from exc
+        finally:
+            tmp_path.unlink(missing_ok=True)Let’s break down this specific function line by line. This is a robust piece of code designed to handle unexpected audio file formatting errors without crashing your app.1. The Function Header and Typingspythondef _transcribe_with_fallback(service: TranscriptionService, path: Path) -> dict:
+Use code with caution.def _transcribe_with_fallback: The leading underscore _ tells other developers this function is a "private helper." It should only be used inside this file.service: TranscriptionService: This type hint means the service variable must be an instance of the custom TranscriptionService class. It tells Python what kind of object to expect.path: Path: This specifies that path is not a plain string, but a dedicated object from Python's built-in pathlib library. It makes managing hard drive paths much cleaner.-> dict: This dictates that when this function completes successfully, it promises to return a Python dictionary ({}).2. The Primary Attempt (The Happy Path)python    try:
+        return service.transcribe(path)
+Use code with caution.try:: This tells Python, "Attempt to run the following indented code blocks. If something goes wrong, don't crash yet—just watch for errors."return service.transcribe(path): The script tries to run your standard transcription model directly on the raw file path. If it works perfectly, the function instantly exits here and returns the text dictionary.3. The Error Catch and Setuppython    except Exception as exc:
+        ffmpeg = imageio_ffmpeg.get_ffmpeg_exe()
+Use code with caution.except Exception as exc:: If the try block crashes (e.g., the audio file is corrupted, or it is named .mp3 but secretly contains a .wav), Python jumps straight down here. The specific details of that error are temporarily saved into a variable called exc (short for exception).imageio_ffmpeg.get_ffmpeg_exe(): This hunts down and retrieves the exact system path to a hidden program called FFmpeg. FFmpeg is an industry-standard external media conversion utility.4. Creating a Safe Temporary Filepython        with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp_file:
+            tmp_path = Path(tmp_file.name)
+Use code with caution.with ... as tmp_file:: This is a Context Manager. It opens a temporary file safely.tempfile.NamedTemporaryFile(...): This creates a physical, randomly named file on your operating system's internal temp folder (e.g., tmp_98374.wav).suffix=".wav": This forces the temporary file to end with the .wav file extension.delete=False: By default, Python deletes temporary files the absolute millisecond the with block finishes. We set this to False because we need the file to stick around a little longer so our AI engine can read it in a later step.Path(tmp_file.name): This converts the raw text path string of that brand-new temp file into a proper pathlib.Path object.5. Running the External Converterpython        try:
+            subprocess.run(
+                [ffmpeg, "-y", "-i", str(path), "-ac", "1", "-ar", "16000", str(tmp_path)],
+                check=True,
+                capture_output=True,
+            )
+            return service.transcribe(tmp_path)
+Use code with caution.Nested try:: We are doing another dangerous operation, so we wrap it in a fresh try block.subprocess.run([...]): This breaks out of Python entirely and runs a command in your computer's terminal behind the scenes.The Command Array: It passes a list of arguments directly to FFmpeg:-y: Overwrite the temporary file if it somehow exists already.-i, str(path): Use our original broken audio file as the Input.-ac, "1": Force the output audio to be 1 channel (Mono).-ar, "16000": Force the audio sampling rate to be 16,000 Hz (the exact rate Whisper requires).str(tmp_path): Save this newly converted, perfect audio file over our temp file.check=True: If FFmpeg fails to convert the audio, force Python to throw an error immediately.capture_output=True: Silences the command so it doesn't flood your console screen with messy text text streams while working.return service.transcribe(tmp_path): Now that the audio is perfectly formatted, it passes the clean tmp_path back into the AI engine.6. The Final Safeguardspython        except Exception:
+            raise RuntimeError(f"Failed to transcribe '{path}' directly and after ffmpeg decode.") from exc
+        finally:
+            tmp_path.unlink(missing_ok=True)
+Use code with caution.raise RuntimeError(...) from exc: If the FFmpeg conversion also fails, the script admits total defeat. It throws a clean RuntimeError telling the user exactly what went wrong. The from exc attachment is beautiful syntax: it chains the original audio error together with this new error so you can read the whole debugging history.finally:: This block is a guaranteed safety contract. No matter what happens above—whether the transcription succeeds perfectly or crashes completely—the code inside this block will execute.tmp_path.unlink(missing_ok=True): unlink() is the pathlib method for deleting a file. This completely scrubs the temporary file off your hard drive so your computer never clogs up with junk files. missing_ok=True keeps it safe; if the file never got created in the first place, it skips deletion quietly without throwing a secondary error.Would you like to explore how to manually mock a broken audio file so you can watch this fallback mechanism trigger in your tests?
+
+def run_fixtures(model_name: str) -> None:
+    """Transcribe all fixture files with one model and print outputs."""
+    fixture_dir = Path("tests/fixtures/asr")
+    # Discover fixtures dynamically so the script still works when fixture names change.
+    files = sorted(
+        [p.name for p in fixture_dir.iterdir() if p.is_file()]
+    ) if fixture_dir.exists() else []
+
+    if not files:
+        print(f"No fixture files found in: {fixture_dir}")
+        return
+
+    engine = WhisperEngine(model_name=model_name, device="cpu", compute_type="int8")
+    service = TranscriptionService(engine=engine)
+
+    for name in files:
+        path = fixture_dir / name
+        print(f"=== {name} ({model_name}) ===")
+        if not path.exists():
+            print("MISSING")
+            continue
+
+        result = _transcribe_with_fallback(service, path)
+        print(f"TEXT: {result['text']!r}")
+        print(f"LANGUAGE: {result['language']}")
+        print(f"SEGMENTS: {result['segments']}")
+        print()Let’s dive deep into this specific function. This block of code automatically finds all audio files inside a test folder, runs them through a specific AI model, and prints out the results cleanly.1. The Complex Directory Lookuppython    fixture_dir = Path("tests/fixtures/asr")
+    files = sorted(
+        [p.name for p in fixture_dir.iterdir() if p.is_file()]
+    ) if fixture_dir.exists() else []
+Use code with caution.This looks dense because it combines a list comprehension with an inline if/else condition (a ternary operator). Let's untangle it from right to left:if fixture_dir.exists() else []: Python first checks if the folder tests/fixtures/asr actually exists on your hard drive. If the folder is missing, it skips all processing and sets files to an empty list [].fixture_dir.iterdir(): If the folder does exist, this looks inside the folder and loops through every single item it finds.if p.is_file(): This acts as a filter. It makes sure Python only looks at actual files (like audio.mp3), while completely ignoring any subfolders.[p.name for p in ... ]: This extracts only the plain filename string (e.g., "testfile_1.wav") instead of keeping the full, messy file path object.sorted(...): This sorts the filenames alphabetically (e.g., testfile_1, testfile_2) so your test results always print out in a predictable order.2. The Early Exit Guardpython    if not files:
+        print(f"No fixture files found in: {fixture_dir}")
+        return
+Use code with caution.if not files:: In Python, an empty list [] evaluates to False. Using if not files means: "If the list is completely empty..."return: This is an "early return" guard clause. It prints a warning message and stops executing the function right there, preventing the script from breaking down below trying to process non-existent files.3. Setting Up the AI Enginespython    engine = WhisperEngine(model_name=model_name, device="cpu", compute_type="int8")
+    service = TranscriptionService(engine=engine)
+Use code with caution.WhisperEngine(...): This initializes the AI.model_name=model_name: Loads the specific model size passed into the function (like "tiny" or "small").device="cpu": Forces your computer's main processor (CPU) to do the heavy mathematical lifting instead of a graphics card (GPU).compute_type="int8": This is a optimization trick called quantization. It compresses the AI's internal numbers into tiny 8-bit integers. It makes the model run incredibly fast on standard laptops and use significantly less memory.TranscriptionService(engine=engine): This passes our newly built AI engine into a higher-level manager class (service) that coordinates the actual data workflow.4. The Loop and Path Constructionpython    for name in files:
+        path = fixture_dir / name
+Use code with caution.fixture_dir / name: The forward slash / is an overloaded operator in Python's pathlib library. Instead of doing division, it safely glues file path directories together. If fixture_dir is "tests/fixtures/asr" and name is "test.wav", this elegantly creates the valid path object "tests/fixtures/asr/test.wav".5. Checking for Ghost Filespython        if not path.exists():
+            print("MISSING")
+            continue
+Use code with caution.continue: If a file was somehow deleted while the loop was starting up, path.exists() becomes False. The continue keyword tells Python to immediately drop everything it is doing for this specific file and jump straight to the next file in the loop.6. Printing the Formatted Resultspython        result = _transcribe_with_fallback(service, path)
+        print(f"TEXT: {result['text']!r}")
+Use code with caution._transcribe_with_fallback(...): This runs the robust conversion function we broke down earlier. It hands back a completed data dictionary (result).{result['text']!r}: The !r flag formats the string using Python's built-in repr() rules. It wraps the output text inside literal quotes and displays raw, invisible characters (like \n or tabs) so developers can spot formatting anomalies instantly.Would you like to examine how the compare_models function uses this exact same dictionary logic to evaluate multiple models side by side?
+
+def parse_args() -> argparse.Namespace:
+    """Parse CLI arguments for choosing fixture run or model comparison mode."""
+    parser = argparse.ArgumentParser(description="Run ASR fixtures or compare ASR models.")
+    parser.add_argument(
+        "--mode",
+        choices=["fixtures", "compare"],
+        default="fixtures",
+        help="fixtures: run many fixture files with one model; compare: run one file with many models",
+    )
+    parser.add_argument(
+        "--model",
+        default="small",
+        help="Model used in fixtures mode (default: small)",
+    )
+    parser.add_argument(
+        "--models",
+        nargs="+",
+        default=["base", "small"],
+        help="Models used in compare mode (default: base small)",
+    )
+    parser.add_argument(
+        "--file",
+        default="tests/fixtures/asr/testfile_2.wav",
+        help="File used in compare mode",
+    )
+    return parser.parse_args()
+
+
+def main() -> None:
+    """Entry point that dispatches to the selected mode."""
+    args = parse_args()
+
+    if args.mode == "fixtures":
+        run_fixtures(model_name=args.model)
+        return
+
+    compare_models(models=args.models, target_file=Path(args.file))
+
+
+if __name__ == "__main__":
+    main()This final section of the script handles the user interface. It allows you to control the entire program from your computer terminal by typing flags like --mode or --model.Here is how this command-line interface (CLI) logic works in depth.1. Defining the Argument Parserpythondef parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Run ASR fixtures or compare ASR models.")
+Use code with caution.argparse.ArgumentParser(...): This creates an empty configuration blueprint for your terminal commands.description="...": This sets up the automatic documentation text. If a user types python script.py --help in their terminal, Python will print this description to explain what the tool does.-> argparse.Namespace: This type hint means the function returns a special object where all user choices are stored as clean attributes (e.g., args.mode).2. Configuring the Terminal Flags (Arguments)python    parser.add_argument(
+        "--mode",
+        choices=["fixtures", "compare"],
+        default="fixtures",
+        help="...",
+    )
+Use code with caution.--mode: The double dashes create an optional parameter. In the terminal, a user can write --mode compare.choices=[...]: This acts as a rigid data validator. If a user tries to run --mode fly, Python blocks them immediately and prints an error saying that only fixtures or compare are allowed.default="fixtures": If the user omits this flag entirely, Python automatically sets the mode to "fixtures".python    parser.add_argument(
+        "--models",
+        nargs="+",
+        default=["base", "small"],
+        help="...",
+    )
+Use code with caution.nargs="+": This stands for "number of arguments: 1 or more". It allows the user to pass a space-separated list of values in the terminal. For example, typing --models tiny base small large will capture all four items and turn them into a standard Python list: ["tiny", "base", "small", "large"].3. Parsing and Returningpython    return parser.parse_args()
+Use code with caution.parser.parse_args(): This line instructs Python to read what the user actually typed into the terminal, match it against your rules, check for syntax errors, and pack everything neatly into the args object.4. Routing the Program Control (main)pythondef main() -> None:
+    args = parse_args()
+
+    if args.mode == "fixtures":
+        run_fixtures(model_name=args.model)
+        return
+
+    compare_models(models=args.models, target_file=Path(args.file))
+Use code with caution.This acts as a digital traffic controller. It checks args.mode and routes the program logic:If it matches "fixtures", it runs the run_fixtures function with the chosen model, then executes return to stop right there.If it is anything else (meaning "compare"), it skips the first block and executes compare_models, converting the string path into a proper Path object using Path(args.file).5. The Script Gatekeeperpythonif __name__ == "__main__":
+    main()
+Use code with caution.__name__ is a built-in variable managed by Python.When you run this script directly (e.g., typing python script.py), Python silently sets __name__ equal to the string "__main__". This triggers the main() function.If you import this file into another Python file to reuse one of its helper functions, __name__ becomes the actual filename instead. The condition fails, preventing the script from accidentally running the audio engine.Would you like to see the exact terminal syntax to pass multiple specific models into the command line when testing?You said: Explain more indepth
+
+1. Defining the Argument Parserpythondef parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Run ASR fixtures or compare ASR models.")
+Use code with caution.argparse.ArgumentParser(...): This creates an empty configuration blueprint for your terminal commands.description="...": This sets up the automatic documentation text. If a user types python script.py --help in their terminal, Python will print this description to explain what the tool does.-> argparse.Namespace: This type hint means the function returns a special object where all user choices are stored as clean attributes (e.g., args.mode).Let's pull back the curtain on this exact code block and look at what Python is doing under the hood.pythondef parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Run ASR fixtures or compare ASR models.")
+Use code with caution.Here is the deep-dive explanation of these components.1. The Blueprint (argparse.ArgumentParser)When you write parser = argparse.ArgumentParser(), you are initializing a highly specialized Python object class. Think of this object as an empty clipboard and a rulebook engine combined.Out of the box, an empty ArgumentParser does three things automatically behind the scenes:Reads the System Terminal: It intercepts the raw text list of whatever strings a user typed after the file name in the console (stored in a hidden system list called sys.argv).Generates Automatic Help Menus: It reserves the -h and --help flags for itself immediately.Prepares a Validator: It sets up an internal checking mechanism. If a user types something that breaks rules you define later (like a typo on a flag name), it intercepts the mistake, halts the program, and prints a clear error message.2. The Documentation String (description="...")The description keyword argument is a hook for user experience.When you pass a string to description, Python stores that text internally inside the parser object. If a user goes to their computer terminal and types either of these commands:bashpython script.py -h
+# OR
+python script.py --help
+Use code with caution.Python will freeze execution of your script's regular logic, clear the console lines, and print out a beautifully structured text manual. It uses your description text right at the very top:textusage: script.py [-h] [--mode {fixtures,compare}] [--model MODEL] 
+
+Run ASR fixtures or compare ASR models.  <-- YOUR DESCRIPTION TEXT SHOWS HERE
+
+options:
+  -h, --help            show this help message and exit
+  --mode {fixtures,compare}
+                        fixtures: run many fixture files with one model...
+Use code with caution.This prevents you from having to manually write print statements to explain how your program works to other teammates.3. The Return Container (-> argparse.Namespace)The arrow -> argparse.Namespace is a type hint that describes the specific shape of the data being handed back by the function.What is a Namespace object?In Python, a standard dictionary stores data using string keys inside brackets, like this: user_choices["mode"].An argparse.Namespace is a specialized, lightweight object wrapper that transforms dictionary keys into direct object properties (attributes). It strips away the bulky bracket syntax and allows you to look up values using clean dot notation:python# Instead of doing this dictionary lookup:
+if args["mode"] == "fixtures":
+
+# A Namespace object allows you to do this clean attribute lookup:
+if args.mode == "fixtures":
+Use code with caution.How it gets built under the hood:When parser.parse_args() completes at the end of the function, it compiles all the inputs it captured from the terminal into this object namespace. If you ran the script with default settings, the returned Namespace object conceptually looks like this inside your computer's memory:pythonNamespace(mode='fixtures', model='small', models=['base', 'small'], file='tests/fixtures/asr/testfile_2.wav')
+Use code with caution.Because it is returned as a Namespace, the main() function can instantly type args.model or args.file to seamlessly pull those strings right into the AI engine.Would you like to see how to intentionally add a custom boolean flag (like --verbose or --save-json) to this parser blueprint?
+

@@ -86,25 +86,16 @@ class NLLBEngine:
         single = isinstance(texts, str)
         inputs = [texts] if single else texts
 
-        # Prepare forced BOS token if tokenizer provides language id map, otherwise prefix.
-        forced_bos_id = None
-        prefix_texts = None
-        try:
-            lang_map = getattr(self._tokenizer, "lang_code_to_id", None)
-            if lang_map and tgt_lang in lang_map:
-                forced_bos_id = lang_map[tgt_lang]
-            else:
-                # Fallback: prepend explicit target language tag token if reasonable.
-                # Many NLLB models accept ">>{lang}<< " prefix; keep this as a fallback.
-                prefix_texts = [f">>{tgt_lang}<< {t}" for t in inputs]
-        except Exception:
-            prefix_texts = [f">>{tgt_lang}<< {t}" for t in inputs]
+        # NLLB requires setting tgt_lang on the tokenizer before tokenizing.
+        # This tells the tokenizer to prepend the language token to the input.
+        # (e.g. for "fra_Latn", the tokenizer will add the French language token)
+        if hasattr(self._tokenizer, "tgt_lang"):
+            self._tokenizer.tgt_lang = tgt_lang
 
-        to_tokenize = prefix_texts if prefix_texts is not None else inputs
-
-        # Tokenize
+        # Tokenize with target language set on the tokenizer.
+        # For NLLB, this automatically adds the language token to the encoding.
         enc = self._tokenizer(
-            to_tokenize,
+            inputs,
             return_tensors="pt",
             padding=True,
             truncation=True,
@@ -114,6 +105,17 @@ class NLLBEngine:
         # Move tensors to the model device
         device = torch.device(self.device)
         enc = {k: v.to(device) for k, v in enc.items()}
+
+        # Try to get the forced BOS token ID for the target language.
+        # For NLLB (NllbTokenizer), we can convert the language code directly to get its token ID.
+        forced_bos_id = None
+        try:
+            # Convert the language code (e.g. "fra_Latn") to its token ID
+            lang_token_ids = self._tokenizer.convert_tokens_to_ids([tgt_lang])
+            if lang_token_ids and lang_token_ids[0] > 0:
+                forced_bos_id = lang_token_ids[0]
+        except Exception:
+            pass
 
         gen_kwargs = dict(max_length=max_length, **generate_kwargs)
         if forced_bos_id is not None:

@@ -7,10 +7,10 @@ to load Piper voice models and write translated text to WAV files.
 from __future__ import annotations
 
 from importlib import metadata
-from pathlib import Path
-import threading
-import time
-import wave
+from pathlib import Path # File and directory handling.
+import threading # Thread-safe access to shared resources.
+import time # Timing and rate limiting.
+import wave # WAV file generation.
 from typing import Optional
 
 from app.utils.logger import get_logger
@@ -35,6 +35,7 @@ DEFAULT_VOICES_DIR = Path("models/piper")
 
 # These are official Piper voice IDs. The corresponding files should live at:
 # models/piper/<voice-id>.onnx and models/piper/<voice-id>.onnx.json.
+# Maps NLLB language codes to Piper voice IDs.
 DEFAULT_VOICE_IDS_BY_NLLB_LANG = {
     "eng_Latn": "en_US-lessac-medium",
     "fra_Latn": "fr_FR-siwis-medium",
@@ -49,7 +50,7 @@ def _default_device() -> str:
     """Prefer CPU unless the caller explicitly asks for CUDA."""
     return "cpu"
 
-
+# Low-level Piper model wrapper.
 class PiperEngine:
     """Small, reusable wrapper around Piper's Python API.
 
@@ -60,7 +61,7 @@ class PiperEngine:
     _instance_lock = threading.Lock()
     _instance: Optional["PiperEngine"] = None
 
-    def __new__(cls, *args, **kwargs):
+    def __new__(cls, *args, **kwargs): # Ensure only one engine instance exists.
         # Reuse one engine object so model caches and locks are shared.
         with cls._instance_lock:
             if cls._instance is None:
@@ -85,10 +86,11 @@ class PiperEngine:
 
         # Cache loaded voice objects by voice ID/path so repeat calls are fast.
         self._voices: dict[str, PiperVoice] = {}
-        self._voice_lock = threading.Lock()
+        self._voice_lock = threading.Lock() # Protect voice cache access.
 
         # This semaphore prevents too many ONNX synthesis jobs from running at
         # once, which protects CPU/RAM when batch-generating files.
+        # Limit concurrent synthesis jobs.
         self._synthesis_slots = threading.Semaphore(self.max_concurrent)
         self._rate_lock = threading.Lock()
         self._last_synthesis_started = 0.0
@@ -107,6 +109,8 @@ class PiperEngine:
         """Return the installed `piper-tts` package version."""
         return PIPER_PACKAGE_VERSION
 
+    
+    # Limit concurrent synthesis jobs.
     def available_voices(self) -> list[str]:
         """Return voice IDs that already have local ONNX model/config files."""
         if not self.voices_dir.exists():
@@ -119,6 +123,7 @@ class PiperEngine:
                 voices.append(model_path.stem)
         return voices
 
+    # Generate speech and save as WAV.
     def synthesize(
         self,
         text: str,
@@ -170,6 +175,7 @@ class PiperEngine:
         logger.info("Piper synthesis completed (output=%s duration_ms=%.2f)", out_path, elapsed_ms)
         return out_path
 
+    # Prevent synthesis bursts.
     def _wait_for_rate_limit(self) -> None:
         """Space out synthesis starts so batch jobs do not spike resources."""
         if self.min_interval_seconds <= 0:
@@ -183,6 +189,7 @@ class PiperEngine:
                 time.sleep(wait_for)
             self._last_synthesis_started = time.perf_counter()
 
+    # Load voice once and reuse it.
     def _load_voice(self, voice: str) -> PiperVoice:
         """Load a Piper voice model once and reuse it for future calls."""
         model_path = self._resolve_model_path(voice)
@@ -203,6 +210,7 @@ class PiperEngine:
             self._voices[cache_key] = loaded_voice
             return loaded_voice
 
+    # Resolve a voice ID to its ONNX file.
     def _resolve_model_path(self, voice: str) -> Path:
         """Resolve a voice ID or explicit path to a local `.onnx` file."""
         candidate = Path(voice)

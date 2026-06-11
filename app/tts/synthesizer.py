@@ -22,14 +22,14 @@ logger = get_logger(__name__)
 
 _DEFAULT_OUT_DIR = Path("data/tts")
 
-
+# Convert text into a filename-safe string.
 def _safe_filename(text: str, max_len: int = 64) -> str:
     """Turn arbitrary text into a short filename-safe label."""
     cleaned = re.sub(r"[^\w\s-]", "", text).strip().lower()
     cleaned = re.sub(r"[\s-]+", "_", cleaned)
     return (cleaned[:max_len] or "tts").strip("_")
 
-
+# High-level TTS orchestration layer.
 class Synthesizer:
     """Convenience layer for creating translated audio files."""
 
@@ -47,17 +47,21 @@ class Synthesizer:
 
         # These voice IDs match Piper's official voice naming style. A voice is
         # usable after its `.onnx` and `.onnx.json` files exist in models/piper.
+        # Language-to-voice mapping.
         self.voice_map = dict(DEFAULT_VOICE_IDS_BY_NLLB_LANG)
 
         # Protect batch file creation from bursts. This is separate from the
         # engine's synthesis semaphore because it controls file-level pacing.
+        # Control output file creation rate.
         self._file_rate_lock = threading.Lock()
         self._recent_file_times: list[float] = []
 
+    # Return voices available for synthesis.
     def available_voices(self) -> list[str]:
         """Return local Piper voices the engine can load right now."""
         return self.engine.available_voices()
 
+    # Select the best voice for a language.
     def voice_for_language(self, lang_code: str) -> str:
         """Choose the best Piper voice ID for an NLLB language code."""
         if lang_code in self.voice_map:
@@ -81,6 +85,7 @@ class Synthesizer:
         )
         return fallback
 
+    # Generate or reuse a translated audio file.
     def synthesize_to_file(
         self,
         text: str,
@@ -98,10 +103,12 @@ class Synthesizer:
 
         # Use text + voice + language for the cache key so repeated translations
         # reuse the same audio file.
+        # Unique identifier for cached audio.
         cache_key = hashlib.sha1(f"{lang_code}::{voice}::{text}".encode("utf-8")).hexdigest()
         safe_name = filename or f"{_safe_filename(text, max_len=32)}_{cache_key[:8]}.wav"
         out_path = self.out_dir / safe_name
 
+        # Reuse existing audio if available.
         if self.cache and out_path.exists():
             logger.info("Using cached TTS file (path=%s)", out_path)
             return out_path
@@ -115,6 +122,7 @@ class Synthesizer:
         )
         return self.engine.synthesize(text=text, voice=voice, out_path=out_path, speaker=speaker)
 
+    # Prevent excessive file generation.
     def _wait_for_file_rate_limit(self) -> None:
         """Limit how quickly many output files can be created in batch jobs."""
         window_seconds = 60.0

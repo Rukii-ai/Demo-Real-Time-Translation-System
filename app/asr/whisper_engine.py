@@ -13,6 +13,8 @@ import soundfile as sf
 import torch
 from faster_whisper import WhisperModel
 
+from app.utils.audio import load_audio, SAMPLE_RATE
+
 
 logger = get_logger(__name__)
 
